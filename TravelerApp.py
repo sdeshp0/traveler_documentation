@@ -9,6 +9,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 df_glossary = pd.read_csv('glossary.csv', index_col='Tag')
 df_questions = pd.read_csv('questions_manual_fix.csv', index_col='QuestionNumber')
+df_questions.index.name = None
 
 st.markdown("<h1 style='text-align: center; color: grey;'> Traveler FAQ App </h1>", unsafe_allow_html=True)
 st.divider()
@@ -36,17 +37,17 @@ with t1:
             ql = ql.strip("[]")
             ql = [int(i) for i in ql.split(", ")]
 
-            st.table(df_questions.loc[ql, ['Question', 'Answer', 'RelatedTags']])
+            st.table(data=df_questions.loc[ql, ['Question', 'Answer', 'RelatedTags']])
 
         else:
             st.error('Queried text is not in the Glossary')
             st.stop()
 
 with t2:
-    st.table(df_glossary)
+    st.table(data=df_glossary)
 
 with t3:
-    st.table(df_questions)
+    st.table(data=df_questions)
 
 with t4:
     st.markdown("<h2 style='text-align: center; color: grey;'> Release Ver 0.1 </h2>", unsafe_allow_html=True)
