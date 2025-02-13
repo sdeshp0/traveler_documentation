@@ -1,5 +1,5 @@
 import streamlit as st
-st.set_page_config(layout='centered', page_title='TravelerApp', initial_sidebar_state='collapsed')
+st.set_page_config(layout='centered', page_title='Traveler FAQ App', initial_sidebar_state='collapsed')
 
 import pandas as pd
 import warnings
@@ -10,11 +10,11 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 df_glossary = pd.read_csv('glossary.csv', index_col='Tag')
 df_questions = pd.read_csv('questions_manual_fix.csv', index_col='QuestionNumber')
 
-st.markdown("<h1 style='text-align: center; color: grey;'> Traveler App </h1>", unsafe_allow_html=True)
+st.markdown("<h1 style='text-align: center; color: grey;'> Traveler FAQ App </h1>", unsafe_allow_html=True)
 st.divider()
 
 st.markdown("<p style='text-align: center; color: grey;'> Welcome to the Traveler App </p>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center; color: grey;'> The Traveler App is a tool that allows the user to query the"
+st.markdown("<p style='text-align: center; color: grey;'> The Traveler App is a tool that allows the user to query the "
             "Traveler FAQ documentation</p>", unsafe_allow_html=True)
 st.divider()
 
@@ -51,6 +51,9 @@ with t3:
 with t4:
     st.markdown("<h2 style='text-align: center; color: grey;'> Release Ver 0.1 </h2>", unsafe_allow_html=True)
 
-    st.subheader('Author')
-    st.write('SID (SID_projects@gmail.com')
+    st.subheader('Link to Traveler Fanfiction')
+    st.write('https://www.fanfiction.net/s/8466693/1/Traveler')
+
+    st.subheader('App Maintainer')
+    st.write('SID (sidprojects01@gmail.com')
     st.divider()
