@@ -70,6 +70,7 @@ def parseGlossaryContent(content):
     for k,v in glossaryDict.items():
         df.loc[k, 'Question'] = v
     df.index.name = 'Tag'
+    df.sort_index(ascending=True, inplace=True)
     return df
 
 
@@ -130,4 +131,4 @@ if __name__ == "__main__":
     glossaryTable = parseGlossaryContent(glossaryContent)
     questionTable = parseQuestionContent(questionContent)
     glossaryTable.to_csv('glossary.csv')
-    questionTable.to_csv('questions.csv', index=False)
+    #questionTable.to_csv('questions.csv', index=False)

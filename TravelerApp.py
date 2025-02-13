@@ -7,7 +7,11 @@ import warnings
 #Suppress FutureWarning messages
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-df_glossary = pd.read_csv('glossary.csv', index_col='Tag')
+df_glossary = pd.read_csv('glossary.csv')
+glossary_tags = [t.lower() for t in df_glossary['Tag']]
+df_glossary.index = glossary_tags
+df_glossary.drop('Tag', inplace=True, axis=1)
+df_glossary.index.name='Tag'
 df_questions = pd.read_csv('questions_manual_fix.csv', index_col='QuestionNumber')
 df_questions.index.name = None
 
@@ -23,24 +27,51 @@ t1, t2, t3, t4 = st.tabs(['Query Glossary Tags', 'Display Glossary Table', 'Disp
 
 with t1:
     st.markdown("<h2 style='text-align: center; color: grey;'> Query Documentation </h2>", unsafe_allow_html=True)
-    st.write('Enter a query tag to get a list of associated questions. Note that the query is case-sensitive')
+    st.write('Enter a query tag to get a list of associated questions')
+    st.write('Partial query tags are supported, eg. a query of "pokemon" will check all tags containing "pokemon" '
+             'and give you a list of all tags containing "pokemon".')
+    st.write('Note that the query is not case-sensitive.')
 
     query = st.text_input(label='Enter Query')
-    run_query = st.button(label='Search Documentation for Query')
+    run_query = st.button(label='Search for Query')
 
     if run_query:
 
-        if query in df_glossary.index:
-            st.success('Query "{}" found in glossary. Listing Questions associated with Query'.format(query))
+        glossary_tags = df_glossary.index
+        queried_tags = [t for t in glossary_tags if query.lower() in t]
 
-            ql = df_glossary.loc[query, 'Question']
+        if len(queried_tags) == 1:
+            st.success('Query "{}" found in glossary tag list. Listing questions associated with query'.format(query))
+
+            ql = df_glossary.loc[query.lower(), 'Question']
             ql = ql.strip("[]")
             ql = [int(i) for i in ql.split(", ")]
 
             st.table(data=df_questions.loc[ql, ['Question', 'Answer', 'RelatedTags']])
 
+        elif len(queried_tags) > 1:
+            if query.lower() in glossary_tags:
+                st.warning('Query text "{}" is found in the tag list as a tag. '
+                           'The text is also found in other tags'.format(query.lower()))
+
+                st.success('Listing questions associated with query tag "{}"'.format(query))
+
+                ql = df_glossary.loc[query.lower(), 'Question']
+                ql = ql.strip("[]")
+                ql = [int(i) for i in ql.split(", ")]
+
+                st.table(data=df_questions.loc[ql, ['Question', 'Answer', 'RelatedTags']])
+
+                st.warning('Query "{}" found in multiple tags. Were you searching for any of the '
+                           'following tags?'.format(query))
+                st.write(queried_tags)
+            else:
+                st.warning('Query "{}" found in multiple tags. Were you searching for any of the '
+                           'following tags?'.format(query))
+                st.write(queried_tags)
+
         else:
-            st.error('Queried text is not in the Glossary')
+            st.error('Queried text is not in the glossary tag list')
             st.stop()
 
 with t2:
@@ -50,7 +81,7 @@ with t3:
     st.table(data=df_questions)
 
 with t4:
-    st.markdown("<h2 style='text-align: center; color: grey;'> Release Ver 0.1 </h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: grey;'> Release Ver 0.2 </h2>", unsafe_allow_html=True)
 
     st.subheader('Credits')
     st.write('TheStraightElf - Author of the Traveler fanfiction story')
