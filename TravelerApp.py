@@ -52,6 +52,11 @@ with t3:
 with t4:
     st.markdown("<h2 style='text-align: center; color: grey;'> Release Ver 0.1 </h2>", unsafe_allow_html=True)
 
+    st.subheader('Credits')
+    st.write('TheStraightElf - Author of the Traveler fanfiction story')
+    st.write('Stuffsearcher - Archivist in the Traveler Discord community, who compiled the source documentation used in '
+             'this app')
+
     st.subheader('Link to Traveler Fanfiction')
     st.write('https://www.fanfiction.net/s/8466693/1/Traveler')
 
