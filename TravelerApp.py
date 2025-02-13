@@ -40,7 +40,7 @@ with t1:
         glossary_tags = df_glossary.index
         queried_tags = [t for t in glossary_tags if query.lower() in t]
 
-        if len(queried_tags) == 1:
+        if len(queried_tags) == 1 and query.lower() in glossary_tags:
             st.success('Query "{}" found in glossary tag list. Listing questions associated with query'.format(query))
 
             ql = df_glossary.loc[query.lower(), 'Question']
@@ -49,7 +49,7 @@ with t1:
 
             st.table(data=df_questions.loc[ql, ['Question', 'Answer', 'RelatedTags']])
 
-        elif len(queried_tags) > 1:
+        elif len(queried_tags) >= 1:
             if query.lower() in glossary_tags:
                 st.warning('Query text "{}" is found in the tag list as a tag. '
                            'The text is also found in other tags'.format(query.lower()))
@@ -62,12 +62,10 @@ with t1:
 
                 st.table(data=df_questions.loc[ql, ['Question', 'Answer', 'RelatedTags']])
 
-                st.warning('Query "{}" found in multiple tags. Were you searching for any of the '
-                           'following tags?'.format(query))
+                st.warning('Were you searching for any of the following tags?')
                 st.write(queried_tags)
             else:
-                st.warning('Query "{}" found in multiple tags. Were you searching for any of the '
-                           'following tags?'.format(query))
+                st.warning('Were you searching for any of the following tags?')
                 st.write(queried_tags)
 
         else:
