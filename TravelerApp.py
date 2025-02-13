@@ -1,5 +1,5 @@
 import streamlit as st
-st.set_page_config(layout='centered', page_title='Traveler FAQ App', initial_sidebar_state='collapsed')
+st.set_page_config(layout='wide', page_title='Traveler FAQ App', initial_sidebar_state='collapsed')
 
 import pandas as pd
 import warnings
