@@ -57,9 +57,11 @@ with t1:
                 c1, c2 = st.columns(2)
 
                 with c1:
+                    st.write('Question:')
                     st.write(df_questions.loc[q, ['Question']].values[0])
 
                 with c2:
+                    st.write('Answer:')
                     st.write(df_questions.loc[q, ['Answer']].values[0])
                 st.write('Related Tags:')
                 st.write(df_questions.loc[q, ['RelatedTags']].values[0])
@@ -87,9 +89,13 @@ with t1:
                         c1, c2 = st.columns(2)
 
                         with c1:
+                            st.markdown("<p style='text-align: left; color: black;'>Question:</p>".format(q),
+                                        unsafe_allow_html=True)
                             st.write(df_questions.loc[q, ['Question']].values[0])
 
                         with c2:
+                            st.markdown("<p style='text-align: left; color: black;'>Answer:</p>".format(q),
+                                        unsafe_allow_html=True)
                             st.write(df_questions.loc[q, ['Answer']].values[0])
                         st.write('Related Tags:')
                         st.write(df_questions.loc[q, ['RelatedTags']].values[0])
