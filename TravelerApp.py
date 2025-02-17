@@ -122,7 +122,7 @@ with t3:
     st.table(data=df_questions)
 
 with t4:
-    st.markdown("<h2 style='text-align: center; color: grey;'> Release Ver 0.2 </h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: grey;'> Release Ver 0.3 </h2>", unsafe_allow_html=True)
 
     st.subheader('Credits')
     st.write('TheStraightElf - Author of the Traveler fanfiction story')
