@@ -32,8 +32,9 @@ with t1:
              'and give you a list of all tags containing "pokemon".')
     st.write('Note that the query is not case-sensitive.')
 
-    query = st.text_input(label='Enter Query')
-    run_query = st.button(label='Search for Query')
+    query = st.text_input(label='Enter query text')
+    run_query = st.button(label='Search for query text in glossary')
+    st.divider()
 
     if run_query:
 
@@ -41,32 +42,68 @@ with t1:
         queried_tags = [t for t in glossary_tags if query.lower() in t]
 
         if len(queried_tags) == 1 and query.lower() in glossary_tags:
-            st.success('Query "{}" found in glossary tag list. Listing questions associated with query'.format(query))
+            st.success('Query "{}" was found in glossary tag list. '
+                       'Listing questions associated with query'.format(query))
 
             ql = df_glossary.loc[query.lower(), 'Question']
             ql = ql.strip("[]")
             ql = [int(i) for i in ql.split(", ")]
 
-            st.table(data=df_questions.loc[ql, ['Question', 'Answer', 'RelatedTags']])
+            c1, c2 = st.columns(2)
+
+            for q in ql:
+                st.markdown("<h5 style='text-align: left; color: black;'> Question {} </h5>".format(q),
+                            unsafe_allow_html=True)
+                c1, c2 = st.columns(2)
+
+                with c1:
+                    st.write(df_questions.loc[q, ['Question']].values[0])
+
+                with c2:
+                    st.write(df_questions.loc[q, ['Answer']].values[0])
+                st.write('Related Tags:')
+                st.write(df_questions.loc[q, ['RelatedTags']].values[0])
+                st.divider()
+
+            #st.table(data=df_questions.loc[ql, ['Question', 'Answer', 'RelatedTags']])
 
         elif len(queried_tags) >= 1:
             if query.lower() in glossary_tags:
-                st.warning('Query text "{}" is found in the tag list as a tag. '
-                           'The text is also found in other tags'.format(query.lower()))
+                st.warning('Query "{}" is a tag in the glossary. '
+                           'Query text was also found in other tags'.format(query.lower()))
 
-                st.success('Listing questions associated with query tag "{}"'.format(query))
+                with st.expander(label='Hide questions associated with tag "{}"?'.format(query), expanded=True):
+                    st.success('Listing questions associated with query tag "{}"'.format(query))
 
-                ql = df_glossary.loc[query.lower(), 'Question']
-                ql = ql.strip("[]")
-                ql = [int(i) for i in ql.split(", ")]
+                    ql = df_glossary.loc[query.lower(), 'Question']
+                    ql = ql.strip("[]")
+                    ql = [int(i) for i in ql.split(", ")]
 
-                st.table(data=df_questions.loc[ql, ['Question', 'Answer', 'RelatedTags']])
+                    c1, c2 = st.columns(2)
 
-                st.warning('Were you searching for any of the following tags?')
-                st.write(queried_tags)
+                    for q in ql:
+                        st.markdown("<h5 style='text-align: left; color: black;'> Question {} </h5>".format(q),
+                                    unsafe_allow_html=True)
+                        c1, c2 = st.columns(2)
+
+                        with c1:
+                            st.write(df_questions.loc[q, ['Question']].values[0])
+
+                        with c2:
+                            st.write(df_questions.loc[q, ['Answer']].values[0])
+                        st.write('Related Tags:')
+                        st.write(df_questions.loc[q, ['RelatedTags']].values[0])
+                        st.divider()
+
+                    #st.table(data=df_questions.loc[ql, ['Question', 'Answer', 'RelatedTags']])
+
+                st.warning('Did you mean to search for any of the following tags?')
+                st.write([t for t in queried_tags if t != query.lower()])
             else:
-                st.warning('Were you searching for any of the following tags?')
-                st.write(queried_tags)
+                st.warning('Query text does not match any of the tags. Did you mean to search for any of the following '
+                           'tags?')
+                st.write([t for t in queried_tags if t != query.lower()])
+                #st.write(queried_tags)
 
         else:
             st.error('Queried text is not in the glossary tag list')
