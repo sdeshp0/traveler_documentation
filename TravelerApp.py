@@ -12,7 +12,7 @@ glossary_tags = [t.lower() for t in df_glossary['Tag']]
 df_glossary.index = glossary_tags
 df_glossary.drop('Tag', inplace=True, axis=1)
 df_glossary.index.name='Tag'
-df_questions = pd.read_csv('questions_manual_fix.csv', index_col='QuestionNumber')
+df_questions = pd.read_csv('travelerfaq.csv', index_col='Num')
 df_questions.index.name = None
 
 st.markdown("<h1 style='text-align: center; color: grey;'> Traveler FAQ App </h1>", unsafe_allow_html=True)
@@ -45,7 +45,7 @@ with t1:
             st.success('Query "{}" was found in glossary tag list. '
                        'Listing questions associated with query'.format(query))
 
-            ql = df_glossary.loc[query.lower(), 'Question']
+            ql = df_glossary.loc[query.lower(), 'RelatedQuestions']
             ql = ql.strip("[]")
             ql = [int(i) for i in ql.split(", ")]
 
@@ -77,7 +77,7 @@ with t1:
                 with st.expander(label='Hide questions associated with tag "{}"?'.format(query), expanded=True):
                     st.success('Listing questions associated with query tag "{}"'.format(query))
 
-                    ql = df_glossary.loc[query.lower(), 'Question']
+                    ql = df_glossary.loc[query.lower(), 'RelatedQuestions']
                     ql = ql.strip("[]")
                     ql = [int(i) for i in ql.split(", ")]
 
@@ -122,7 +122,7 @@ with t3:
     st.table(data=df_questions)
 
 with t4:
-    st.markdown("<h2 style='text-align: center; color: grey;'> Release Ver 0.3 </h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: grey;'> Release Ver 0.5 </h2>", unsafe_allow_html=True)
 
     st.subheader('Credits')
     st.write('TheStraightElf - Author of the Traveler fanfiction story')
@@ -131,6 +131,18 @@ with t4:
 
     st.subheader('Link to Traveler Fanfiction')
     st.write('https://www.fanfiction.net/s/8466693/1/Traveler')
+
+    st.subheader('Traveler FAQ documentation is up to date as of the following:')
+    st.write('General: 2023-10-10')
+    st.write('New Island: 2021-09-09')
+    st.write('Spoilers: 2021-07-30')
+    st.write('Art: 2021-07-30')
+    st.write('Stories: 2021-07-30')
+    st.write('Indigo Stadium: 2021-07-30')
+    st.write('Off Topic: 2021-07-30')
+    st.write('Oak Corral: 2021-07-30')
+    st.write('Media: 2021-07-30')
+    st.write('Traveler Drabble Reviews: 2021-07-30')
 
     st.subheader('App Maintainer')
     st.write('SID (sidprojects01@gmail.com')
