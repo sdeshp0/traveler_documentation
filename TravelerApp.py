@@ -1,8 +1,10 @@
 import streamlit as st
-st.set_page_config(layout='wide', page_title='Traveler App')
-
+import matplotlib.pyplot as plt
+from datetime import datetime
 import pandas as pd
+import numpy as np
 import warnings
+st.set_page_config(layout='wide', page_title='Traveler App')
 
 #Suppress FutureWarning messages
 warnings.simplefilter(action='ignore', category=FutureWarning)
