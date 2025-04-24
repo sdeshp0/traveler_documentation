@@ -1,8 +1,7 @@
 import streamlit as st
 import warnings
 import pandas as pd
-
-st.set_page_config(layout='wide', page_title='Traveler App')
+st.set_page_config(layout='wide', page_title='Traveler App', initial_sidebar_state='expanded')
 
 #Suppress FutureWarning messages
 warnings.simplefilter(action='ignore', category=FutureWarning)
@@ -15,13 +14,11 @@ st.session_state['glossary'] = df_glossary
 st.session_state['faq'] = df_questions
 st.session_state['updates'] = df_updates
 
-st.sidebar.success('Select a Page')
-
 st.markdown("<h1 style='text-align: center; color: grey;'> Traveler Fanfiction App </h1>", unsafe_allow_html=True)
 st.divider()
 
-st.markdown("<p style='text-align: center; color: grey;'> The Traveler Fanfiction App is intended as a resource for"
-            "fans and followers of the Traveler fanfiction story. Please use the sidebar to access the various pages"
+st.markdown("<p style='text-align: left; color: grey;'> The Traveler Fanfiction App is intended as a resource for "
+            "fans and followers of the Traveler fanfiction story. Please use the sidebar to access the various pages."
             "</p>", unsafe_allow_html=True)
 st.divider()
 
@@ -32,8 +29,7 @@ with st.expander('About and Credits'):
 
     st.subheader('Credits')
     st.write('TheStraightElf - Author of the Traveler fanfiction story')
-    st.write('Stuffsearcher - Archivist in the Traveler Discord community, who compiled the source documentation used in '
-             'this app')
+    st.write('Stuffsearcher - Archivist in the Traveler Discord community, who compiled the Traveler FAQ')
 
     st.subheader('Link to Traveler Fanfiction')
     st.write('https://www.fanfiction.net/s/8466693/1/Traveler')

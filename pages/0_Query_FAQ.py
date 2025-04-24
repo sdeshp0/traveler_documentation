@@ -1,7 +1,5 @@
 import streamlit as st
 st.set_page_config(layout='wide', page_title='Query FAQ')
-
-import pandas as pd
 import warnings
 
 #Suppress FutureWarning messages
@@ -19,7 +17,7 @@ df_questions.index.name = None
 st.markdown("<h1 style='text-align: center; color: grey;'> Traveler FAQ </h1>", unsafe_allow_html=True)
 st.divider()
 
-st.markdown("<p style='text-align: center; color: grey;'> This is a query tool that let's you query the Traveler FAQ"
+st.markdown("<p style='text-align: left; color: grey;'> This is a query tool that let's you query the Traveler FAQ "
             "based on keyword tags associated with each question and answer</p>", unsafe_allow_html=True)
 st.divider()
 

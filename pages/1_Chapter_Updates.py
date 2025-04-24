@@ -1,9 +1,6 @@
 import streamlit as st
-import matplotlib
 from matplotlib import pyplot as plt
 from datetime import datetime
-import pandas as pd
-import numpy as np
 import warnings
 
 st.set_page_config(layout='wide', page_title='Chapter Updates')
@@ -56,7 +53,7 @@ general_notes.index.name=None
 st.markdown("<h1 style='text-align: center; color: grey;'> Traveler Chapter Update History </h1>", unsafe_allow_html=True)
 st.divider()
 
-st.markdown("<p style='text-align: center; color: grey;'> This is the chapter update history of the Traveler "
+st.markdown("<p style='text-align: left; color: grey;'> This is the chapter update history of the Traveler "
             "fanfiction story</p>", unsafe_allow_html=True)
 st.divider()
 
