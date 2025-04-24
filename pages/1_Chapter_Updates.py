@@ -65,7 +65,7 @@ st.dataframe(df_updates[chapter_cols], use_container_width=True)
 st.divider()
 
 with st.expander('Display Chapter Notes'):
-    st.table(chapter_notes)
+    st.dataframe(chapter_notes, use_container_width=True)
 
 with st.expander('Display General Notes'):
-    st.dataframe(general_notes)
+    st.dataframe(general_notes, use_container_width=True)

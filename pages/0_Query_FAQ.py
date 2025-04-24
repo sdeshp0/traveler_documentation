@@ -115,8 +115,8 @@ with t1:
 
 with t2:
     st.markdown("<h2 style='text-align: center; color: grey;'> Tag Glossary </h2>", unsafe_allow_html=True)
-    st.table(data=df_glossary)
+    st.dataframe(data=df_glossary, use_container_width=True)
 
 with t3:
     st.markdown("<h2 style='text-align: center; color: grey;'> Traveler FAQ </h2>", unsafe_allow_html=True)
-    st.table(data=df_questions)
+    st.dataframe(data=df_questions, use_container_width=True)
