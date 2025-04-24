@@ -7,7 +7,7 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 df_glossary = st.session_state['glossary']
 df_questions = st.session_state['faq']
-
+df_glossary.reset_index(inplace=True)
 glossary_tags = [t.lower() for t in df_glossary['Tag']]
 df_glossary.index = glossary_tags
 df_glossary.drop('Tag', inplace=True, axis=1)
