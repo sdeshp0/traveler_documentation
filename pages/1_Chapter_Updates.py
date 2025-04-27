@@ -57,15 +57,17 @@ st.markdown("<p style='text-align: left; color: grey;'> This is the chapter upda
             "fanfiction story</p>", unsafe_allow_html=True)
 st.divider()
 
-st.pyplot(generate_chart(df_updates))
-st.divider()
-
 st.subheader('Chapter Update Table')
 st.dataframe(df_updates[chapter_cols], use_container_width=True)
 st.divider()
 
+with st.expander('Display Chapter Update Chart'):
+    st.pyplot(generate_chart(df_updates))
+st.divider()
+
 with st.expander('Display Chapter Notes'):
     st.dataframe(chapter_notes, use_container_width=True)
+st.divider()
 
 with st.expander('Display General Notes'):
     st.dataframe(general_notes, use_container_width=True)
