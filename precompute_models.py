@@ -17,7 +17,6 @@ from nltk.stem import WordNetLemmatizer
 
 # Load the datasets
 FAQ_DF = pd.read_csv('data/travelerfaq.csv', index_col='Num')
-FAQ_DF.index.name = None
 
 # Preprocess text
 def preprocess_text(text):
@@ -47,6 +46,7 @@ FAQ_EMBEDDINGS = np.array(FAQ_DF["embedding"].tolist())
 
 # Save models and processed data
 
-FAQ_DF.to_csv('data/processed_faq.csv', index=False)
+FAQ_DF.to_csv('data/processed_faq.csv')
 np.save('data/faq_embeddings.npy', np.array(FAQ_DF['embedding'].tolist()))
 pickle.dump(VECTORIZER, open('data/tfidf_vectorizer.pkl', 'wb'))
+pickle.dump(TFIDF_MATRIX, open('data/tfidf_matrix.pkl', 'wb'))
