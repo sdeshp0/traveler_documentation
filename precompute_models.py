@@ -6,9 +6,6 @@ import re
 import nltk
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
-from collections import OrderedDict
-from functools import lru_cache
 
 # Load nltk resources
 nltk.data.path.append(os.path.join(os.getcwd(), 'nltk_resources'))
