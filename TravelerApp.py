@@ -1,11 +1,12 @@
 import streamlit as st
-import warnings
 import pandas as pd
-
-st.set_page_config(layout='wide', page_title='Traveler App', initial_sidebar_state='expanded')
+import warnings
 
 #Suppress FutureWarning messages
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
+st.set_page_config(layout='wide', page_title='Traveler App', initial_sidebar_state='expanded')
+st.logo(image='data/pokeball_logo.png')
 
 @st.cache_data(show_spinner='Reading Data')
 def load_data():

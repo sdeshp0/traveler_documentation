@@ -3,10 +3,11 @@ from matplotlib import pyplot as plt
 from datetime import datetime
 import warnings
 
-st.set_page_config(layout='wide', page_title='Chapter Updates')
-
 #Suppress FutureWarning messages
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
+st.set_page_config(layout='wide', page_title='Chapter Updates')
+st.logo(image='data/pokeball_logo.png')
 
 def generate_chart(df):
     dates = [datetime.strptime(d, '%b %d, %Y') for d in df['Date*']]

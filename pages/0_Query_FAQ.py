@@ -1,14 +1,14 @@
 import streamlit as st
-
-st.set_page_config(layout='wide', page_title='Query FAQ')
-
-with st.spinner('Loading Query Search Algorithms'):
-    from FAQSearch import GlossarySearch, TFIDFsearch, EmbeddingSearch, HybridSearch
-
 import warnings
 
 #Suppress FutureWarning messages
 warnings.simplefilter(action='ignore', category=FutureWarning)
+
+st.set_page_config(layout='wide', page_title='Query FAQ')
+st.logo(image='data/pokeball_logo.png')
+
+with st.spinner('Loading Query Search Algorithms'):
+    from FAQSearch import GlossarySearch, TFIDFsearch, EmbeddingSearch, HybridSearch
 
 df_glossary = st.session_state['glossary']
 df_questions = st.session_state['faq']
