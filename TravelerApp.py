@@ -37,8 +37,7 @@ with st.expander('About and Credits'):
     st.subheader('Credits')
     st.write('TheStraightElf - Author of the Traveler fanfiction story')
     st.write('Stuffsearcher - Archivist in the Traveler Discord community, who compiled the Traveler FAQ')
-    st.write('Logo Credit - Andreuvv - Own work, Public Domain, '
-             'https://commons.wikimedia.org/w/index.php?curid=52462734')
+    st.write('Logo Credit - Andreuvv, Public domain, via Wikimedia Commons')
 
     st.subheader('Link to Traveler Fanfiction')
     st.write('https://www.fanfiction.net/s/8466693/1/Traveler')
