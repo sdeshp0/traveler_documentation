@@ -1,6 +1,6 @@
 import pandas as pd
 
-df_faq = pd.read_csv('travelerfaq.csv')
+df_faq = pd.read_csv('../data/travelerfaq.csv')
 glossary_list = []
 
 for i, row in enumerate(df_faq.index.values):

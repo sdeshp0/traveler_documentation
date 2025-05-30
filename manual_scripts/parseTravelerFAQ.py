@@ -124,7 +124,7 @@ def parseQuestionContent(content):
     return df
 
 if __name__ == "__main__":
-    md_file_path = "TravelerFAQ.md"  # Replace with your Markdown file path
+    md_file_path = "../data/TravelerFAQ.md"  # Replace with your Markdown file path
     result = parse_markdown_file_to_html(md_file_path)
     glossaryContent = get_content_between_headers(result, 'Glossary', 'Questions')
     questionContent = get_content_between_headers(result, 'Questions', 'Last updated')
