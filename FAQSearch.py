@@ -1,10 +1,10 @@
 import numpy as np
 import pandas as pd
+import pickle
 import os
 import re
 import nltk
 from sentence_transformers import SentenceTransformer
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import OrderedDict
 from functools import lru_cache
@@ -14,17 +14,22 @@ nltk.data.path.append(os.path.join(os.getcwd(), 'nltk_resources'))
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer
 
+# Load the datasets and precomputed models
 
-# Load the datasets
-FAQ_DF = pd.read_csv('data/travelerfaq.csv', index_col='Num')
+FAQ_DF = pd.read_csv('data/processed_faq.csv', index_col='Num')
+FAQ_DF.index.name = None
+
 GLOSSARY_DF = pd.read_csv('data/glossary.csv')
-
 GLOSSARY_DF.reset_index(inplace=True)
 glossary_tags = [t.lower() for t in GLOSSARY_DF['Tag']]
 GLOSSARY_DF.index = glossary_tags
 GLOSSARY_DF.drop('Tag', inplace=True, axis=1)
 GLOSSARY_DF.index.name='Tag'
-FAQ_DF.index.name = None
+
+MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+FAQ_EMBEDDINGS = np.load('data/faq_embeddings.npy')
+VECTORIZER = pickle.load(open('data/tfidf_vectorizer.pkl', 'rb'))
+TFIDF_MATRIX = pickle.load(open('data/tfidf_matrix.pkl', 'rb'))
 
 # Preprocess text
 def preprocess_text(text):
@@ -36,21 +41,6 @@ def preprocess_text(text):
     stop_words = set(stopwords.words('english'))
     words = [lemmatizer.lemmatize(word) for word in words if word not in stop_words]
     return ' '.join(words)
-
-# Apply preprocessing
-FAQ_DF['Q&A'] = FAQ_DF['Question'] + ' ' + FAQ_DF['Answer']
-FAQ_DF['processed'] = FAQ_DF['Q&A'].apply(preprocess_text)
-
-# Fit TF-IDF model once globally
-VECTORIZER = TfidfVectorizer(max_features=500, ngram_range=(1,2), stop_words='english')
-TFIDF_MATRIX = VECTORIZER.fit_transform(FAQ_DF['processed'])
-
-# Load a Pre-trained sentence embedding model
-MODEL = SentenceTransformer('all-MiniLM-L6-v2')
-
-# Compute Embeddings once globally
-FAQ_DF['embedding'] = FAQ_DF['Q&A'].apply(lambda x: MODEL.encode(x))
-FAQ_EMBEDDINGS = np.array(FAQ_DF["embedding"].tolist())
 
 class GlossarySearch:
     def __init__(self, query):
