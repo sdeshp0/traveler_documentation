@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
 import re
-import os
 import nltk
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -10,10 +11,8 @@ from collections import OrderedDict
 from functools import lru_cache
 
 # Load nltk resources
-
-nltk.data.path.append(os.path.join(os.getcwd(), "nltk_resources"))
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+nltk.download('stopwords')
+nltk.download('wordnet')
 
 # Load the datasets
 FAQ_DF = pd.read_csv('data/travelerfaq.csv', index_col='Num')
