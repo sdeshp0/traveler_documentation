@@ -7,7 +7,7 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 st.set_page_config(layout='wide', page_title='Chapter Updates')
-st.logo(image='data/pokeball_logo.svg')
+st.logo('data/pokeball_logo.svg')
 
 def generate_chart(df):
     dates = [datetime.strptime(d, '%b %d, %Y') for d in df['Date*']]

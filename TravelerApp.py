@@ -6,7 +6,7 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 st.set_page_config(layout='wide', page_title='Traveler App', initial_sidebar_state='expanded')
-st.logo(image='data/pokeball_logo.svg')
+st.logo('data/pokeball_logo.svg')
 
 @st.cache_data(show_spinner='Reading Data')
 def load_data():
