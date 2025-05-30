@@ -1,14 +1,20 @@
 import streamlit as st
 import warnings
 import pandas as pd
+
 st.set_page_config(layout='wide', page_title='Traveler App', initial_sidebar_state='expanded')
 
 #Suppress FutureWarning messages
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-df_glossary = pd.read_csv('glossary.csv')
-df_questions = pd.read_csv('travelerfaq.csv', index_col='Num')
-df_updates = pd.read_csv('travelerchapterupdates.csv', index_col='Chapter')
+@st.cache_data(show_spinner='Reading Data')
+def load_data():
+    df1 = pd.read_csv('data/glossary.csv')
+    df2 = pd.read_csv('data/travelerfaq.csv', index_col='Num')
+    df3 = pd.read_csv('data/travelerchapterupdates.csv', index_col='Chapter')
+    return df1, df2, df3
+
+df_glossary, df_questions, df_updates = load_data()
 
 st.session_state['glossary'] = df_glossary
 st.session_state['faq'] = df_questions
@@ -25,7 +31,7 @@ st.divider()
 with st.expander('About and Credits'):
 
     st.markdown("<h1 style='text-align: center; color: grey;'> About </h1>", unsafe_allow_html=True)
-    st.markdown("<h2 style='text-align: center; color: grey;'> Release Ver 1.0 </h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: grey;'> Release Ver 1.1 </h2>", unsafe_allow_html=True)
 
     st.subheader('Credits')
     st.write('TheStraightElf - Author of the Traveler fanfiction story')
