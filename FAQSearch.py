@@ -1,17 +1,21 @@
 import numpy as np
 import pandas as pd
 import re
+import os
 import nltk
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+import torch
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import OrderedDict
 from functools import lru_cache
 
-nltk.download('stopwords')
-nltk.download('wordnet')
+torch.classes.__path__ = [] # add this line to manually set empty path and avoid warning in streamlit
+# Load nltk resources
+
+nltk.data.path.append(os.path.join(os.getcwd(), "nltk_resources"))
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
 
 # Load the datasets
 FAQ_DF = pd.read_csv('data/travelerfaq.csv', index_col='Num')
