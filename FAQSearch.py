@@ -3,14 +3,12 @@ import pandas as pd
 import re
 import os
 import nltk
-import torch
 from sentence_transformers import SentenceTransformer
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import OrderedDict
 from functools import lru_cache
 
-torch.classes.__path__ = [] # add this line to manually set empty path and avoid warning in streamlit
 # Load nltk resources
 
 nltk.data.path.append(os.path.join(os.getcwd(), "nltk_resources"))
