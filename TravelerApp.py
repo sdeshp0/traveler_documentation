@@ -6,7 +6,7 @@ import warnings
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 st.set_page_config(layout='wide', page_title='Traveler App', initial_sidebar_state='expanded')
-st.logo(image='data/pokeball_logo.png')
+st.logo(image='data/pokeball_logo.svg')
 
 @st.cache_data(show_spinner='Reading Data')
 def load_data():
@@ -37,6 +37,8 @@ with st.expander('About and Credits'):
     st.subheader('Credits')
     st.write('TheStraightElf - Author of the Traveler fanfiction story')
     st.write('Stuffsearcher - Archivist in the Traveler Discord community, who compiled the Traveler FAQ')
+    st.write('Logo Credit - Andreuvv - Own work, Public Domain, '
+             'https://commons.wikimedia.org/w/index.php?curid=52462734')
 
     st.subheader('Link to Traveler Fanfiction')
     st.write('https://www.fanfiction.net/s/8466693/1/Traveler')
