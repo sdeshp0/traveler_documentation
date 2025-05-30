@@ -21,8 +21,8 @@ def generate_chart(df):
     # column chart
     ax1.bar(dates, count, color='darkblue', label='Word Count', width=10)
     ax1.set_xlabel('Date')
-    ax1.set_ylabel('Word Count', color='blue')
-    ax1.tick_params(axis='y', labelcolor='blue')
+    ax1.set_ylabel('Word Count', color='black')
+    ax1.tick_params(axis='y', labelcolor='black')
 
     # Running Avg Line
 
@@ -33,8 +33,8 @@ def generate_chart(df):
 
     ax2 = ax1.twinx()
     ax2.plot(dates, tot_count, color='black', label='Running Total Word Count')
-    ax2.set_ylabel('Running Total Word Count', color='green')
-    ax2.tick_params(axis='y', labelcolor='green')
+    ax2.set_ylabel('Running Total Word Count', color='black')
+    ax2.tick_params(axis='y', labelcolor='black')
     ax2.legend(loc='upper right')
 
     plt.title('Traveler Fanfiction Chapter Updates')
