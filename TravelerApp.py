@@ -2,6 +2,10 @@ import streamlit as st
 import pandas as pd
 import warnings
 
+#Fix Streamlit-Torch Issue
+import torch
+torch.classes.__path__ = []
+
 #Suppress FutureWarning messages
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
