@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 import warnings
 
 #Fix Streamlit-Torch Issue
@@ -11,9 +12,15 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 st.set_page_config(layout='wide', page_title='Query FAQ')
 st.logo('data/pokeball_logo.svg')
 
+@st.cache_data(show_spinner='Loading FAQ Data')
+def load_data():
+    st.session_state['glossary'] = pd.read_csv('data/glossary.csv')
+    st.session_state['faq'] = pd.read_csv('data/travelerfaq.csv', index_col='Num')
+
 with st.spinner('Loading Query Search Algorithms'):
     from FAQSearch import GlossarySearch, TFIDFsearch, EmbeddingSearch, HybridSearch
 
+load_data()
 df_glossary = st.session_state['glossary']
 df_questions = st.session_state['faq']
 df_glossary.reset_index(inplace=True)

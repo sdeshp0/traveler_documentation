@@ -1,4 +1,5 @@
 import streamlit as st
+import pandas as pd
 from matplotlib import pyplot as plt
 from datetime import datetime
 import warnings
@@ -12,6 +13,13 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 
 st.set_page_config(layout='wide', page_title='Chapter Updates')
 st.logo('data/pokeball_logo.svg')
+
+@st.cache_data(show_spinner='Loading Chapter Data')
+def load_data():
+    st.session_state['updates'] = pd.read_csv('data/travelerchapterupdates.csv', index_col='Chapter')
+
+
+load_data()
 
 def generate_chart(df):
     dates = [datetime.strptime(d, '%b %d, %Y') for d in df['Date*']]

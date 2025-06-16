@@ -12,15 +12,6 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 st.set_page_config(layout='wide', page_title='Traveler App', initial_sidebar_state='expanded')
 st.logo('data/pokeball_logo.svg')
 
-@st.cache_data(show_spinner='Reading Data')
-def load_data():
-    st.session_state['glossary'] = pd.read_csv('data/glossary.csv')
-    st.session_state['faq'] = pd.read_csv('data/travelerfaq.csv', index_col='Num')
-    st.session_state['updates'] = pd.read_csv('data/travelerchapterupdates.csv', index_col='Chapter')
-
-
-load_data()
-
 st.markdown("<h1 style='text-align: center; color: grey;'> Traveler Fanfiction App </h1>", unsafe_allow_html=True)
 st.divider()
 
