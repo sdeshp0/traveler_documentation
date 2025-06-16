@@ -44,7 +44,7 @@ def preprocess_text(text):
 
 class GlossarySearch:
     def __init__(self, query):
-        self.query = query
+        self.query = query.lower()
         self.queryTags = self.query_tags()
         self.questionNums = self.question_list()
         self.result = self.query_faq()
