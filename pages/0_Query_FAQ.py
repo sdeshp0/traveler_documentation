@@ -68,6 +68,8 @@ with st.expander('Query using Glossary Tags'):
     st.divider()
 
     if query:
+
+        query = query.lower()
         glossary_search = GlossarySearch(query)
 
         qt = glossary_search.queryTags
@@ -76,7 +78,7 @@ with st.expander('Query using Glossary Tags'):
 
         if ql:
             st.success('Queried text "{}" was found in the glossary tag list. '
-                       'Listing questions associated with this query:'.format(query))
+                       'Listing questions associated with this query:'.format(query.lower()))
 
             if len(qt) > 1:
                 st.warning('Queried text "{}" was also found in other tags. '
