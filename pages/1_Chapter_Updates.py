@@ -14,13 +14,6 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 st.set_page_config(layout='wide', page_title='Chapter Updates')
 st.logo('data/pokeball_logo.svg')
 
-@st.cache_data(show_spinner='Loading Chapter Data')
-def load_data():
-    st.session_state['updates'] = pd.read_csv('data/travelerchapterupdates.csv', index_col='Chapter')
-
-
-load_data()
-
 def generate_chart(df):
     dates = [datetime.strptime(d, '%b %d, %Y') for d in df['Date*']]
     count = [int(x.replace(',', '')) for x in df['Word Count**']]
@@ -54,7 +47,12 @@ def generate_chart(df):
     plt.tight_layout()
     return fig
 
-df_updates = st.session_state['updates']
+
+if 'updates' not in st.session_state:
+    df_updates = pd.read_csv('data/travelerchapterupdates.csv', index_col='Chapter')
+    st.session_state['updates'] = df_updates
+else:
+    df_updates = st.session_state['updates']
 
 chapter_cols = [c for c in df_updates.columns if 'Notes' not in c]
 chapter_notes = df_updates['Chapter Notes'].copy().dropna()

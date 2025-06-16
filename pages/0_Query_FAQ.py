@@ -12,17 +12,21 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 st.set_page_config(layout='wide', page_title='Query FAQ')
 st.logo('data/pokeball_logo.svg')
 
-@st.cache_data(show_spinner='Loading FAQ Data')
-def load_data():
-    st.session_state['glossary'] = pd.read_csv('data/glossary.csv')
-    st.session_state['faq'] = pd.read_csv('data/travelerfaq.csv', index_col='Num')
-
 with st.spinner('Loading Query Search Algorithms'):
     from FAQSearch import GlossarySearch, TFIDFsearch, EmbeddingSearch, HybridSearch
 
-load_data()
-df_glossary = st.session_state['glossary']
-df_questions = st.session_state['faq']
+if 'glossary' not in st.session_state:
+    df_glossary = pd.read_csv('data/glossary.csv')
+    st.session_state['glossary'] = df_glossary
+else:
+    df_glossary = st.session_state['glossary']
+
+if 'faq' not in st.session_state:
+    df_questions = pd.read_csv('data/travelerfaq.csv', index_col='Num')
+    st.session_state['faq'] = df_questions
+else:
+    df_questions = st.session_state['faq']
+
 df_glossary.reset_index(inplace=True)
 glossary_tags = [t.lower() for t in df_glossary['Tag']]
 df_glossary.index = glossary_tags
