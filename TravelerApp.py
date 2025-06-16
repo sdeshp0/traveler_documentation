@@ -14,16 +14,12 @@ st.logo('data/pokeball_logo.svg')
 
 @st.cache_data(show_spinner='Reading Data')
 def load_data():
-    df1 = pd.read_csv('data/glossary.csv')
-    df2 = pd.read_csv('data/travelerfaq.csv', index_col='Num')
-    df3 = pd.read_csv('data/travelerchapterupdates.csv', index_col='Chapter')
-    return df1, df2, df3
+    st.session_state['glossary'] = pd.read_csv('data/glossary.csv')
+    st.session_state['faq'] = pd.read_csv('data/travelerfaq.csv', index_col='Num')
+    st.session_state['updates'] = pd.read_csv('data/travelerchapterupdates.csv', index_col='Chapter')
 
-df_glossary, df_questions, df_updates = load_data()
 
-st.session_state['glossary'] = df_glossary
-st.session_state['faq'] = df_questions
-st.session_state['updates'] = df_updates
+load_data()
 
 st.markdown("<h1 style='text-align: center; color: grey;'> Traveler Fanfiction App </h1>", unsafe_allow_html=True)
 st.divider()
