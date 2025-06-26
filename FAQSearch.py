@@ -4,6 +4,7 @@ import pickle
 import os
 import re
 import nltk
+from transformers import pipeline
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 from collections import OrderedDict
@@ -27,11 +28,12 @@ GLOSSARY_DF.drop('Tag', inplace=True, axis=1)
 GLOSSARY_DF.index.name='Tag'
 
 MODEL = SentenceTransformer('all-MiniLM-L6-v2')
+SUMMARIZER = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
 FAQ_EMBEDDINGS = np.load('data/faq_embeddings.npy')
 VECTORIZER = pickle.load(open('data/tfidf_vectorizer.pkl', 'rb'))
 TFIDF_MATRIX = pickle.load(open('data/tfidf_matrix.pkl', 'rb'))
 
-# Preprocess text
+
 def preprocess_text(text):
     """Clean and normalize text for better matching."""
     text = text.lower()
@@ -41,6 +43,7 @@ def preprocess_text(text):
     stop_words = set(stopwords.words('english'))
     words = [lemmatizer.lemmatize(word) for word in words if word not in stop_words]
     return ' '.join(words)
+
 
 class GlossarySearch:
     def __init__(self, query):
@@ -68,75 +71,8 @@ class GlossarySearch:
             return None
 
 
-class TFIDFsearch:
-    def __init__(self, query, top_n=10, similarity_threshold=0.25):
-        """Initialize the FAQ search system with a query."""
-        self.query = query
-        self.top_n = top_n
-        self.similarity_threshold = similarity_threshold
-
-        # Perform search upon initialization with caching
-        self.results = self.cached_search_faq(self.query, self.top_n, self.similarity_threshold)
-
-    @lru_cache(maxsize=25)  # Cache up to 25 queries
-    def cached_search_faq(self, query, top_n, similarity_threshold):
-        """Retrieve top N most relevant FAQ entries based on query using caching."""
-        query_vec = VECTORIZER.transform([preprocess_text(query)])
-        similarities = cosine_similarity(query_vec, TFIDF_MATRIX).flatten()
-
-        # Filter and sort by similarity score
-        top_indices = similarities.argsort()[::-1]
-        top_matches = [(i, similarities[i]) for i in top_indices if similarities[i] > similarity_threshold]
-
-        # Get top-N results
-        results = FAQ_DF.iloc[[i[0] for i in top_matches[:top_n]]][['Question', 'RelatedTags', 'Answer']]
-        return results
-
-
-class EmbeddingSearch:
-    def __init__(self, query, top_n=10, similarity_threshold=0.5, cache_size=25):
-        """Initialize FAQ search using embedding-based similarity."""
-        self.query = query
-        self.top_n = top_n
-        self.similarity_threshold = similarity_threshold
-        self.cache_size = cache_size
-        self.cache = OrderedDict()  # Initialize cache storage
-
-        # Perform search upon initialization
-        self.results = self.search_faq()
-
-    def update_cache(self, query, result):
-        """Store query results and dynamically remove older entries."""
-        if query in self.cache:
-            self.cache.move_to_end(query)  # Maintain order for repeated queries
-        else:
-            self.cache[query] = result  # Add new entry
-            if len(self.cache) > self.cache_size:  # Enforce cache limit
-                self.cache.popitem(last=False)  # Remove oldest item
-
-    def search_faq(self):
-        """Retrieve top N most relevant FAQ entries based on embedding similarity."""
-        if self.query in self.cache:
-            return self.cache[self.query]  # Return cached result
-
-        query_embedding = MODEL.encode(preprocess_text(self.query))
-        similarities = cosine_similarity([query_embedding], FAQ_EMBEDDINGS).flatten()
-
-        # Filter and sort by similarity score
-        top_indices = similarities.argsort()[::-1]
-        top_matches = [(i, similarities[i]) for i in top_indices if similarities[i] > self.similarity_threshold]
-
-        # Get top-N results
-        results = FAQ_DF.iloc[[i[0] for i in top_matches[:self.top_n]]][['Question', 'RelatedTags', 'Answer']]
-        results = results
-
-        # Store result in cache
-        self.update_cache(self.query, results)
-        return results
-
-
 class HybridSearch:
-    def __init__(self, query, top_n=5, similarity_threshold=0.3, embedding_weight=0.6, cache_size=25):
+    def __init__(self, query, top_n=5, similarity_threshold=0.3, embedding_weight=0.6, cache_size=10):
         """Initialize FAQ hybrid search with query."""
         self.query = query
         self.top_n = top_n
@@ -181,9 +117,131 @@ class HybridSearch:
         top_matches = [(i, combined_scores[i]) for i in top_indices if combined_scores[i] > self.similarity_threshold]
 
         # Get top-N results
-        results = FAQ_DF.iloc[[i[0] for i in top_matches[:self.top_n]]][['Question', 'RelatedTags', 'Answer']]
-        results = results
+        top_rows = FAQ_DF.iloc[[i[0] for i in top_matches[:self.top_n]]][['Question', 'RelatedTags', 'Answer']]
+
+        if not top_rows.empty:
+            answers = top_rows["Answer"].tolist()
+            concatenated_text = " ".join(answers)
+
+            # Scale summary length based on how many answers are matched
+            match_count = len(answers)
+            max_len = min(300, 60 + 60 * match_count)  # Cap at 300 tokens
+            min_len = min(100, 20 + 20 * match_count)
+
+            # Generate summary using model
+            summary = SUMMARIZER(concatenated_text[:3000],
+                                        max_length=max_len,
+                                        min_length=min_len,
+                                        do_sample=False)[0]["summary_text"]
+
+        else:
+            summary = 'No relevant entries were found for your query. Please try again with a different query.'
+
+        results = {
+            "summary": summary,
+            "matches": top_rows
+        }
 
         # Store result in cache
         self.update_cache(self.query, results)
         return results
+
+
+'''
+Deprecated Classes
+Embedding-Search and TFIDF Search have been combined into a Hybrid Search
+'''
+
+
+class TFIDFsearch:
+    def __init__(self, query, top_n=5, similarity_threshold=0.25):
+        """Initialize the FAQ search system with a query."""
+        self.query = query
+        self.top_n = top_n
+        self.similarity_threshold = similarity_threshold
+
+        # Perform search upon initialization with caching
+        self.results = self.cached_search_faq(self.query, self.top_n, self.similarity_threshold)
+
+    @lru_cache(maxsize=10)  # Cache up to 10 queries
+    def cached_search_faq(self, query, top_n, similarity_threshold):
+        """Retrieve top N most relevant FAQ entries based on query using caching."""
+        query_vec = VECTORIZER.transform([preprocess_text(query)])
+        similarities = cosine_similarity(query_vec, TFIDF_MATRIX).flatten()
+
+        # Filter and sort by similarity score
+        top_indices = similarities.argsort()[::-1]
+        top_matches = [(i, similarities[i]) for i in top_indices if similarities[i] > similarity_threshold]
+
+        # Get top-N results
+        top_rows = FAQ_DF.iloc[[i[0] for i in top_matches[:top_n]]][['Question', 'RelatedTags', 'Answer']]
+
+        if not top_rows.empty:
+            # Generate summary from concatenated answers
+            concatenated_answers = " ".join(top_rows["Answer"].tolist())[:1024]  # Limit for model input
+            summary = SUMMARIZER(concatenated_answers, max_length=75, min_length=25, do_sample=False)[0]["summary_text"]
+        else:
+            summary = 'No relevant entries were found for your query. Please try again with a different query.'
+
+        results = {
+            "summary": summary,
+            "matches": top_rows
+        }
+
+        return results
+
+
+class EmbeddingSearch:
+    def __init__(self, query, top_n=5, similarity_threshold=0.5, cache_size=10):
+        """Initialize FAQ search using embedding-based similarity."""
+        self.query = query
+        self.top_n = top_n
+        self.similarity_threshold = similarity_threshold
+        self.cache_size = cache_size
+        self.cache = OrderedDict()  # Initialize cache storage
+
+        # Perform search upon initialization
+        self.results = self.search_faq()
+
+    def update_cache(self, query, result):
+        """Store query results and dynamically remove older entries."""
+        if query in self.cache:
+            self.cache.move_to_end(query)  # Maintain order for repeated queries
+        else:
+            self.cache[query] = result  # Add new entry
+            if len(self.cache) > self.cache_size:  # Enforce cache limit
+                self.cache.popitem(last=False)  # Remove oldest item
+
+    def search_faq(self):
+        """Retrieve top N most relevant FAQ entries based on embedding similarity."""
+        if self.query in self.cache:
+            return self.cache[self.query]  # Return cached result
+
+        query_embedding = MODEL.encode(preprocess_text(self.query))
+        similarities = cosine_similarity([query_embedding], FAQ_EMBEDDINGS).flatten()
+
+        # Filter and sort by similarity score
+        top_indices = similarities.argsort()[::-1]
+        top_matches = [(i, similarities[i]) for i in top_indices if similarities[i] > self.similarity_threshold]
+
+        # Get top-N results
+        top_rows = FAQ_DF.iloc[[i[0] for i in top_matches[:self.top_n]]][['Question', 'RelatedTags', 'Answer']]
+
+        if not top_rows.empty:
+
+            # Generate summary from concatenated answers
+            concatenated_answers = " ".join(top_rows["Answer"].tolist())[:1024]  # Limit for model input
+            summary = SUMMARIZER(concatenated_answers, max_length=75, min_length=25, do_sample=False)[0]["summary_text"]
+
+        else:
+            summary = 'No relevant entries were found for your query. Please try again with a different query.'
+
+        results = {
+            "summary": summary,
+            "matches": top_rows
+        }
+
+        # Store result in cache
+        self.update_cache(self.query, results)
+        return results
+

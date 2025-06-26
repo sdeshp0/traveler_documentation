@@ -12,6 +12,15 @@ warnings.simplefilter(action='ignore', category=FutureWarning)
 st.set_page_config(layout='wide', page_title='Query FAQ')
 st.logo('data/pokeball_logo.svg')
 
+# Add Markdown formatting
+st.markdown('''
+<style>
+[data-testid="stMarkdownContainer"] ul{
+    padding-left:40px;
+}
+</style>
+''', unsafe_allow_html=True)
+
 with st.spinner('Loading Query Search Algorithms'):
     from FAQSearch import GlossarySearch, TFIDFsearch, EmbeddingSearch, HybridSearch
 
@@ -112,124 +121,83 @@ st.divider()
 with st.expander('Experimental Queries'):
     st.markdown("<h2 style='text-align: center; color: grey;'> Experimental query methods </h2>", unsafe_allow_html=True)
 
-    st.markdown("<p style='text-align: left; color: grey;'> These are experimental queries based on NLP tools and "
-                " algorithms. This allows you to query using statements or questions. The queries are then processed "
-                "and evaluated against the text in the FAQ to filter and display relevant questions and answers from "
-                "the FAQ. As these query methods are experimental, the results may not be as reliable.</p>",
+    st.markdown("<p style='text-align: left; color: grey;'> This is an experimental query tool based on NLP toolkits "
+                "and algorithms. This allows you to query using statements or questions. The queries are then  "
+                "processed and evaluated against the text in the FAQ to filter and display relevant questions and  "
+                "answers from the FAQ. As this query method is experimental, the results may not be as reliable.</p.",
                 unsafe_allow_html=True)
-    st.write('Note that these search algorithms do NOT use AI or Generative AI models.')
+    st.write('Note that this search method does not directly use Generative AI. Neither the FAQ nor the user query '
+             'is sent to an Generative AI using an API service. Rather, this app uses pre-trained and pre-computed '
+             'models.')
+
+    if st.checkbox('Show more details?'):
+        st.write('This is a hybrid search technique that combines keyword-based and vector embedding-based'
+                 ' approaches. High confidence matches in the FAQ are prioritized.')
+        st.write('The two different search techniques that are combined in this hybrid search are: ')
+        st.write('1) TF-IDF: Term Frequency - Inverse Document Frequency')
+        st.markdown('* Weighs words based on their relative importance in the document')
+        st.markdown('* identifies relevant entries in the FAQ based on keyword similarity between the query and '
+                    'document.')
+        st.write('2) Embedding-Based Search')
+        st.markdown('* Matches queries to FAQ based on semantic meaning rather than keyword overlaps and similarity.')
+        st.markdown('*  Works by converting the FAQ text into sentence embeddings, improving context-awareness.')
+        st.write()
+        st.write('The hybrid approach creates a similarity matrix and sentence embeddings for questions and '
+                 'answers in the FAQ and applies the same techniques to the user query. The two different '
+                 'algorithms each look for similarities between the user query and the FAQ text, returning a '
+                 'set of scored matches that are evaluated versus a preset similarity threshold - this is a '
+                 'kind of acceptance criteria for determining if a given row of the FAQ is a good match for '
+                 'the user query.')
+        st.write()
+        st.write('The summary response takes the answers from the top matches shown and attempts to provide a '
+                 'short summary of the answers. The summary uses the pre-trained model: '
+                 '"sshleifer/distilibart-cnn-12-6" from the HuggingFace Transformers library. This is a distilled '
+                 'version of the Facebook BART model that has been fine-tuned on the CNN/DailyMail news '
+                 'summarization dataset.')
+        st.write()
+        st.write('Note that the summary is only as good as the quality of the matches returned by the hybrid search '
+                 'algorithm.')
     st.divider()
 
     query = st.text_input('Enter your question:')
-    algorithm = st.selectbox(label='Choose Query Algorithm',
-                             options=['TF-IDF', 'Embedding-Based', 'Hybrid'],
-                             index=2)
     st.divider()
 
     if query:
 
-        if algorithm == 'TF-IDF':
+        st.markdown(
+            "<h2 style='text-align: center; color: grey;'> Hybrid Search "
+            "</h2>", unsafe_allow_html=True)
 
-            st.markdown("<h2 style='text-align: center; color: grey;'> TF-IDF: Term Frequency - Inverse Document Frequency "
-                        "</h2>", unsafe_allow_html=True)
-            st.write('Weighs words based on their relative importance in the document and identifies relevant entries'
-                    'in the FAQ based on text similarity between the query and document text.')
+        hybrid_search = HybridSearch(query)
+        hybrid_result = hybrid_search.results
 
-            tfidf_search = TFIDFsearch(query)
-            tfidf_result = tfidf_search.results
+        hybrid_summary = hybrid_result['summary']
+        hybrid_table = hybrid_result['matches']
 
-            if not tfidf_result.empty:
-                st.write('Here are some relevant entries based on your query ordered by relevance:')
+        if not hybrid_table.empty:
+            if st.checkbox('Display a summarized response?'):
+                st.write(hybrid_summary)
+            st.divider()
+            st.write('Here are the relevant matches from the FAQ')
 
-                for q in tfidf_result.index.values:
-                    st.markdown("<h5 style='text-align: left; color: black;'> Question {} </h5>".format(q),
+            for q in hybrid_table.index.values:
+                st.markdown("<h5 style='text-align: left; color: black;'> Question {} </h5>".format(q),
+                            unsafe_allow_html=True)
+                c1, c2 = st.columns(2)
+
+                with c1:
+                    st.markdown("<p style='text-align: left; color: black;'>Question:</p>",
                                 unsafe_allow_html=True)
-                    c1, c2 = st.columns(2)
+                    st.write(hybrid_table.loc[q, ['Question']].values[0])
 
-                    with c1:
-                        st.markdown("<p style='text-align: left; color: black;'>Question:</p>",
-                                    unsafe_allow_html=True)
-                        st.write(tfidf_result.loc[q, ['Question']].values[0])
-
-                    with c2:
-                        st.markdown("<p style='text-align: left; color: black;'>Answer:</p>",
-                                    unsafe_allow_html=True)
-                        st.write(tfidf_result.loc[q, ['Answer']].values[0])
-                    st.write('Related Tags:')
-                    st.write(tfidf_result.loc[q, ['RelatedTags']].values[0])
-                    st.divider()
-
-            else:
-                st.write('No relevant entries were found for your query. Please try again with a different query.')
-
-        elif algorithm == 'Embedding-Based':
-
-            st.markdown(
-                "<h2 style='text-align: center; color: grey;'> Embedding-Based Search "
-                "</h2>", unsafe_allow_html=True)
-            st.write('Matches queries to FAQ based on semantic meaning rather than keyword overlaps and similarity.'
-                     ' This approach works by converting the FAQ text into sentence embeddings, enabling more'
-                     ' context-aware searches.')
-
-            embedding_search = EmbeddingSearch(query)
-            embedding_result = embedding_search.results
-
-            if not embedding_result.empty:
-                st.write('Here are some relevant entries based on your query ordered by relevance:')
-
-                for q in embedding_result.index.values:
-                    st.markdown("<h5 style='text-align: left; color: black;'> Question {} </h5>".format(q),
+                with c2:
+                    st.markdown("<p style='text-align: left; color: black;'>Answer:</p>",
                                 unsafe_allow_html=True)
-                    c1, c2 = st.columns(2)
-
-                    with c1:
-                        st.markdown("<p style='text-align: left; color: black;'>Question:</p>",
-                                    unsafe_allow_html=True)
-                        st.write(embedding_result.loc[q, ['Question']].values[0])
-
-                    with c2:
-                        st.markdown("<p style='text-align: left; color: black;'>Answer:</p>",
-                                    unsafe_allow_html=True)
-                        st.write(embedding_result.loc[q, ['Answer']].values[0])
-                    st.write('Related Tags:')
-                    st.write(embedding_result.loc[q, ['RelatedTags']].values[0])
-                    st.divider()
-
-            else:
-                st.write('No relevant entries were found for your query. Please try again with a different query.')
+                    st.write(hybrid_table.loc[q, ['Answer']].values[0])
+                st.write('Related Tags:')
+                st.write(hybrid_table.loc[q, ['RelatedTags']].values[0])
+                st.divider()
 
         else:
-
-            st.markdown(
-                "<h2 style='text-align: center; color: grey;'> Hybrid Search "
-                "</h2>", unsafe_allow_html=True)
-            st.write('Combines the keyword-based and embedding-based approaches and prioritizes high-confidence matches'
-                     'from each method.')
-
-            hybrid_search = HybridSearch(query)
-            hybrid_result = hybrid_search.results
-
-            if not hybrid_result.empty:
-                st.write('Here are some relevant entries based on your query ordered by relevance:')
-
-                for q in hybrid_result.index.values:
-                    st.markdown("<h5 style='text-align: left; color: black;'> Question {} </h5>".format(q),
-                                unsafe_allow_html=True)
-                    c1, c2 = st.columns(2)
-
-                    with c1:
-                        st.markdown("<p style='text-align: left; color: black;'>Question:</p>",
-                                    unsafe_allow_html=True)
-                        st.write(hybrid_result.loc[q, ['Question']].values[0])
-
-                    with c2:
-                        st.markdown("<p style='text-align: left; color: black;'>Answer:</p>",
-                                    unsafe_allow_html=True)
-                        st.write(hybrid_result.loc[q, ['Answer']].values[0])
-                    st.write('Related Tags:')
-                    st.write(hybrid_result.loc[q, ['RelatedTags']].values[0])
-                    st.divider()
-
-            else:
-                st.write('No relevant entries were found for your query. Please try again with a different query.')
+            st.write(hybrid_summary)
 
