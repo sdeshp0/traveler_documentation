@@ -3,61 +3,28 @@ import pandas as pd
 import pickle
 import os
 import re
-import nltk
-from transformers import pipeline
 from sentence_transformers import SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
+from precompute_models import preprocess_text, truncate_to_full_sentences, truncate_summary
 from collections import OrderedDict
 from functools import lru_cache
 
-# Load nltk resources
-nltk.data.path.append(os.path.join(os.getcwd(), 'nltk_resources'))
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
-
-# Load the datasets and precomputed models
-
-FAQ_DF = pd.read_csv('data/processed_faq.csv', index_col='Num')
-FAQ_DF.index.name = None
-
-GLOSSARY_DF = pd.read_csv('data/glossary.csv')
-GLOSSARY_DF.reset_index(inplace=True)
-glossary_tags = [t.lower() for t in GLOSSARY_DF['Tag']]
-GLOSSARY_DF.index = glossary_tags
-GLOSSARY_DF.drop('Tag', inplace=True, axis=1)
-GLOSSARY_DF.index.name='Tag'
-
-MODEL = SentenceTransformer('all-MiniLM-L6-v2')
-SUMMARIZER = pipeline("summarization", model="sshleifer/distilbart-cnn-12-6")
-FAQ_EMBEDDINGS = np.load('data/faq_embeddings.npy')
-VECTORIZER = pickle.load(open('data/tfidf_vectorizer.pkl', 'rb'))
-TFIDF_MATRIX = pickle.load(open('data/tfidf_matrix.pkl', 'rb'))
-
-
-def preprocess_text(text):
-    """Clean and normalize text for better matching."""
-    text = text.lower()
-    text = re.sub(r'\W+', ' ', text)
-    words = text.split()
-    lemmatizer = WordNetLemmatizer()
-    stop_words = set(stopwords.words('english'))
-    words = [lemmatizer.lemmatize(word) for word in words if word not in stop_words]
-    return ' '.join(words)
-
 
 class GlossarySearch:
-    def __init__(self, query):
+    def __init__(self, query, faq_df, glossary_df):
         self.query = query
+        self.faq_df = faq_df
+        self.glossary_df = glossary_df
         self.queryTags = self.query_tags()
         self.questionNums = self.question_list()
         self.result = self.query_faq()
 
     def query_tags(self):
-        return [t for t in GLOSSARY_DF.index if self.query in t]
+        return [t for t in self.glossary_df.index if self.query in t]
 
     def question_list(self):
         if len(self.queryTags) > 0:
-            ql = GLOSSARY_DF.loc[self.query.lower(), 'RelatedQuestions']
+            ql = self.glossary_df.loc[self.query.lower(), 'RelatedQuestions']
             ql = ql.strip("[]")
             ql = [int(i) for i in ql.split(", ")]
             return ql
@@ -66,22 +33,37 @@ class GlossarySearch:
 
     def query_faq(self):
         if self.questionNums:
-            return FAQ_DF.loc[self.questionNums,['Question', 'RelatedTags', 'Answer']]
+            return self.faq_df.loc[self.questionNums,['Question', 'RelatedTags', 'Answer']]
         else:
             return None
 
 
 class HybridSearch:
-    def __init__(self, query, top_n=5, similarity_threshold=0.3, embedding_weight=0.6, cache_size=10):
-        """Initialize FAQ hybrid search with query."""
+    def __init__(
+        self,
+        query,
+        faq_df,
+        faq_embeddings,
+        tfidf_matrix,
+        tfidf_vectorizer,
+        summarizer,
+        top_n=5,
+        similarity_threshold=0.3,
+        embedding_weight=0.6,
+        cache_size=50,
+    ):
         self.query = query
+        self.faq_df = faq_df
+        self.faq_embeddings = faq_embeddings
+        self.tfidf_matrix = tfidf_matrix
+        self.vectorizer = tfidf_vectorizer
+        self.summarizer = summarizer
         self.top_n = top_n
         self.similarity_threshold = similarity_threshold
-        self.embedding_weight = embedding_weight  # Adjust influence of embeddings
+        self.embedding_weight = embedding_weight
         self.cache_size = cache_size
-        self.cache = OrderedDict()  # Initialize cache storage
-
-        # Perform search upon initialization
+        self.cache = OrderedDict()
+        self.model = SentenceTransformer('all-MiniLM-L6-v2')
         self.results = self.hybrid_search_faq()
 
     def update_cache(self, query, result):
@@ -93,6 +75,17 @@ class HybridSearch:
             if len(self.cache) > self.cache_size:  # Enforce cache limit
                 self.cache.popitem(last=False)  # Remove oldest item
 
+    def safe_summary(self, text, desired_max=200, desired_min=60):
+        num_words = len(text.split())
+        max_len = min(desired_max, int(num_words * 0.8))  # Adjust to 80% of input length
+        max_len = max(max_len, desired_min+1)                 # Ensure max > min
+        return self.summarizer(text,
+                               max_length=max_len,
+                               min_length=desired_min,
+                               do_sample=False,
+                               truncation=True
+                               )[0]['summary_text']
+
     def hybrid_search_faq(self):
         """Retrieve top N most relevant FAQ entries using hybrid method."""
         if self.query in self.cache:
@@ -101,12 +94,12 @@ class HybridSearch:
         query_preprocessed = preprocess_text(self.query)
 
         # TF-IDF Search
-        query_vec = VECTORIZER.transform([query_preprocessed])
-        tfidf_similarities = cosine_similarity(query_vec, TFIDF_MATRIX).flatten()
+        query_vec = self.vectorizer.transform([query_preprocessed])
+        tfidf_similarities = cosine_similarity(query_vec, self.tfidf_matrix).flatten()
 
         # Embedding-Based Search
-        query_embedding = MODEL.encode(query_preprocessed)
-        embedding_similarities = cosine_similarity([query_embedding], FAQ_EMBEDDINGS).flatten()
+        query_embedding = self.model.encode(query_preprocessed)
+        embedding_similarities = cosine_similarity([query_embedding], self.faq_embeddings).flatten()
 
         # Hybrid Score Fusion
         combined_scores = (tfidf_similarities * (1 - self.embedding_weight)) + (
@@ -117,23 +110,20 @@ class HybridSearch:
         top_matches = [(i, combined_scores[i]) for i in top_indices if combined_scores[i] > self.similarity_threshold]
 
         # Get top-N results
-        top_rows = FAQ_DF.iloc[[i[0] for i in top_matches[:self.top_n]]][['Question', 'RelatedTags', 'Answer']]
+        top_rows = self.faq_df.iloc[[i[0] for i in top_matches[:self.top_n]]][['Question', 'RelatedTags', 'Answer']]
 
         if not top_rows.empty:
             answers = top_rows["Answer"].tolist()
             concatenated_text = " ".join(answers)
+            clean_text = truncate_to_full_sentences(concatenated_text)
 
             # Scale summary length based on how many answers are matched
             match_count = len(answers)
             max_len = min(300, 60 + 60 * match_count)  # Cap at 300 tokens
             min_len = min(100, 20 + 20 * match_count)
 
-            # Generate summary using model
-            summary = SUMMARIZER(concatenated_text[:3000],
-                                        max_length=max_len,
-                                        min_length=min_len,
-                                        do_sample=False)[0]["summary_text"]
-
+            summary = self.safe_summary(text=clean_text, desired_max=max_len, desired_min=min_len)
+            summary = truncate_summary(summary)
         else:
             summary = 'No relevant entries were found for your query. Please try again with a different query.'
 
@@ -147,16 +137,16 @@ class HybridSearch:
         return results
 
 
-'''
+_='''
 Deprecated Classes
 Embedding-Search and TFIDF Search have been combined into a Hybrid Search
-'''
 
 
 class TFIDFsearch:
-    def __init__(self, query, top_n=5, similarity_threshold=0.25):
+    def __init__(self, query, summarizer, top_n=5, similarity_threshold=0.25):
         """Initialize the FAQ search system with a query."""
         self.query = query
+        self.summarizer = summarizer
         self.top_n = top_n
         self.similarity_threshold = similarity_threshold
 
@@ -179,7 +169,8 @@ class TFIDFsearch:
         if not top_rows.empty:
             # Generate summary from concatenated answers
             concatenated_answers = " ".join(top_rows["Answer"].tolist())[:1024]  # Limit for model input
-            summary = SUMMARIZER(concatenated_answers, max_length=75, min_length=25, do_sample=False)[0]["summary_text"]
+            summarizer = self.summarizer
+            summary = summarizer(concatenated_answers, max_length=75, min_length=25, do_sample=False)[0]["summary_text"]
         else:
             summary = 'No relevant entries were found for your query. Please try again with a different query.'
 
@@ -192,9 +183,10 @@ class TFIDFsearch:
 
 
 class EmbeddingSearch:
-    def __init__(self, query, top_n=5, similarity_threshold=0.5, cache_size=10):
+    def __init__(self, query, summarizer, top_n=5, similarity_threshold=0.5, cache_size=10):
         """Initialize FAQ search using embedding-based similarity."""
         self.query = query
+        self.summarizer = summarizer
         self.top_n = top_n
         self.similarity_threshold = similarity_threshold
         self.cache_size = cache_size
@@ -231,7 +223,8 @@ class EmbeddingSearch:
 
             # Generate summary from concatenated answers
             concatenated_answers = " ".join(top_rows["Answer"].tolist())[:1024]  # Limit for model input
-            summary = SUMMARIZER(concatenated_answers, max_length=75, min_length=25, do_sample=False)[0]["summary_text"]
+            summarizer = self.summarizer
+            summary = summarizer(concatenated_answers, max_length=75, min_length=25, do_sample=False)[0]["summary_text"]
 
         else:
             summary = 'No relevant entries were found for your query. Please try again with a different query.'
@@ -245,3 +238,4 @@ class EmbeddingSearch:
         self.update_cache(self.query, results)
         return results
 
+'''

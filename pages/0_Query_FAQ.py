@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import numpy as np
+import pickle
 import warnings
 
 #Fix Streamlit-Torch Issue
@@ -22,7 +24,23 @@ st.markdown('''
 ''', unsafe_allow_html=True)
 
 with st.spinner('Loading Query Search Algorithms'):
-    from FAQSearch import GlossarySearch, TFIDFsearch, EmbeddingSearch, HybridSearch
+    from FAQSearch import GlossarySearch, HybridSearch
+    from precompute_models import load_summarizer
+
+    # The Summarizer is rather heavier than the other models. Use cache so it only needs to load once
+    @st.cache_resource
+    def get_summarizer():
+        return load_summarizer()
+    summarizer = get_summarizer()
+
+    @st.cache_resource
+    def load_precompute():
+        fe = np.load('data/faq_embeddings.npy')
+        v = pickle.load(open('data/tfidf_vectorizer.pkl', 'rb'))
+        tm = pickle.load(open('data/tfidf_matrix.pkl', 'rb'))
+        return fe, v, tm
+    embeddings, vectorizer, tfidf_matrix = load_precompute()
+
 
 if 'glossary' not in st.session_state:
     df_glossary = pd.read_csv('data/glossary.csv')
@@ -40,7 +58,7 @@ df_glossary.reset_index(inplace=True)
 glossary_tags = [t.lower() for t in df_glossary['Tag']]
 df_glossary.index = glossary_tags
 df_glossary.drop('Tag', inplace=True, axis=1)
-df_glossary.index.name='Tag'
+df_glossary.index.name ='Tag'
 df_questions.index.name = None
 
 st.markdown("<h1 style='text-align: center; color: grey;'> Traveler FAQ </h1>", unsafe_allow_html=True)
@@ -79,7 +97,7 @@ with st.expander('Query using Glossary Tags'):
     if query:
 
         query = query.lower()
-        glossary_search = GlossarySearch(query)
+        glossary_search = GlossarySearch(query=query, glossary_df=df_glossary, faq_df=df_questions)
 
         qt = glossary_search.queryTags
         ql = glossary_search.questionNums
@@ -168,7 +186,13 @@ with st.expander('Experimental Queries'):
             "<h2 style='text-align: center; color: grey;'> Hybrid Search "
             "</h2>", unsafe_allow_html=True)
 
-        hybrid_search = HybridSearch(query)
+        hybrid_search = HybridSearch(query=query,
+                                     summarizer=summarizer,
+                                     faq_df=df_questions,
+                                     faq_embeddings=embeddings,
+                                     tfidf_vectorizer=vectorizer,
+                                     tfidf_matrix=tfidf_matrix
+                                     )
         hybrid_result = hybrid_search.results
 
         hybrid_summary = hybrid_result['summary']
