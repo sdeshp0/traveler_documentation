@@ -75,7 +75,6 @@ def preprocess_data():
 
     # Precompute Embeddings
     FAQ_DF['embedding'] = FAQ_DF['Q&A'].apply(lambda x: MODEL.encode(x))
-    FAQ_EMBEDDINGS = np.array(FAQ_DF["embedding"].tolist())
 
     # Save models and processed data
 
@@ -83,6 +82,7 @@ def preprocess_data():
     np.save('data/faq_embeddings.npy', np.array(FAQ_DF['embedding'].tolist()))
     pickle.dump(VECTORIZER, open('data/tfidf_vectorizer.pkl', 'wb'))
     pickle.dump(TFIDF_MATRIX, open('data/tfidf_matrix.pkl', 'wb'))
+
 
 if __name__ == '__main__':
     preprocess_data()
