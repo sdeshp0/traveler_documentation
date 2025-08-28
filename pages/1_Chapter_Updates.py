@@ -66,7 +66,7 @@ st.markdown("<p style='text-align: left; color: grey;'> This is the chapter upda
 st.divider()
 
 st.subheader('Chapter Update Table')
-st.dataframe(df_updates[chapter_cols], use_container_width=True)
+st.dataframe(df_updates[chapter_cols], width='stretch')
 st.divider()
 
 with st.expander('Display Chapter Update Chart'):
@@ -74,8 +74,8 @@ with st.expander('Display Chapter Update Chart'):
 st.divider()
 
 with st.expander('Display Chapter Notes'):
-    st.dataframe(chapter_notes, use_container_width=True)
+    st.dataframe(chapter_notes, width='stretch')
 st.divider()
 
 with st.expander('Display General Notes'):
-    st.dataframe(general_notes, use_container_width=True)
+    st.dataframe(general_notes, width='stretch')
