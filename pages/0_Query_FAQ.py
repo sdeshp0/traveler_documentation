@@ -53,11 +53,11 @@ with st.expander('View FAQ'):
     with t1:
         st.markdown("<h2 style='text-align: center; color: grey;'> Tag Glossary </h2>", unsafe_allow_html=True)
         glossary_table = df_glossary.drop('index', axis=1)
-        st.dataframe(data=glossary_table, use_container_width=True)
+        st.dataframe(data=glossary_table, width='stretch')
 
     with t2:
         st.markdown("<h2 style='text-align: center; color: grey;'> Traveler FAQ </h2>", unsafe_allow_html=True)
-        st.dataframe(data=df_questions, use_container_width=True)
+        st.dataframe(data=df_questions, width='stretch')
 
 st.divider()
 
