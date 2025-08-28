@@ -74,8 +74,8 @@ st.write('*Chapter date is based on the earliest review posted on FFN.')
 st.write('**word counts based on https://wordcounter.net/. Counts may include section break text, '
          'but exclude author\'s notes.')
 
-st.write('*** Note that the total word count might differ from what is shown on fanfiction.net. '
-         'This is because ffn uses a different methodology to count words that results in a roughly 2% higher word '
+st.write('*** Note that the total word count might differ from what is shown on FFN. '
+         'This is because FFN uses a different methodology to count words that results in a roughly 2% higher word '
          'count as compared to most word processors. See Reddit post by SteelbadgerMk2 in this thread for more '
          'detail - https://www.reddit.com/r/FanFiction/comments/nkp1w2/word_count_on_ao3_and_ffnet/.')
 
