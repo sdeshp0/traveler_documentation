@@ -36,7 +36,7 @@ with st.expander('About and Credits'):
     st.write('Stuffsearcher - Archivist in the Traveler Discord community, who compiled the Traveler FAQ')
     st.write('Logo Credit - Andreuvv, Public domain, via Wikimedia Commons')
 
-    st.subheader('Link to Traveler Fanfiction')
+    st.subheader('Link to Traveler on FFN')
     st.write('https://www.fanfiction.net/s/8466693/1/Traveler')
 
     st.subheader('Traveler FAQ documentation is up to date as of the following:')
