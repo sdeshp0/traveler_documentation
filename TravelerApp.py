@@ -2,15 +2,12 @@ import streamlit as st
 import pandas as pd
 import warnings
 
-#Fix Streamlit-Torch Issue
-import torch
-torch.classes.__path__ = []
-
-#Suppress FutureWarning messages
+# Suppress FutureWarning messages
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
 st.set_page_config(layout='wide', page_title='Traveler App', initial_sidebar_state='expanded')
 st.logo('data/pokeball_logo.svg')
+
 
 @st.cache_data(show_spinner='Loading FAQ Data')
 def load_data():
