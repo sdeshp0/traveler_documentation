@@ -4,9 +4,6 @@ from matplotlib import pyplot as plt
 from datetime import datetime
 import warnings
 
-#Fix Streamlit-Torch Issue
-import torch
-torch.classes.__path__ = []
 
 #Suppress FutureWarning messages
 warnings.simplefilter(action='ignore', category=FutureWarning)
