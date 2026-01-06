@@ -88,6 +88,9 @@ with st.expander('Query using Glossary Tags'):
                 st.warning('Queried text "{}" was also found in other tags. '
                            'Please check the list below the displayed results.'.format(query.lower()))
 
+                st.warning('Did you mean to search for any of the following?'.format(query.lower()))
+                st.write([t for t in qt if t != query.lower()])
+
             for q in ql:
                 st.markdown("<h5 style='text-align: left; color: black;'> Question {} </h5>".format(q),
                             unsafe_allow_html=True)
@@ -105,8 +108,5 @@ with st.expander('Query using Glossary Tags'):
                 st.write(qr.loc[q, ['RelatedTags']].values[0])
                 st.divider()
 
-            if len(qt) > 1:
-                st.warning('Did you mean to search for any of the following?'.format(query.lower()))
-                st.write([t for t in qt if t != query.lower()])
         else:
             st.error('Queried text is not in the glossary tag list. Please try another query.')

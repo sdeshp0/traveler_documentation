@@ -12,17 +12,22 @@ class GlossarySearch:
         return [t for t in self.glossary_df.index if self.query in t]
 
     def question_list(self):
+        ql = []
         if len(self.queryTags) > 0:
-            ql = self.glossary_df.loc[self.query.lower(), 'RelatedQuestions']
-            ql = ql.strip("[]")
-            ql = [int(i) for i in ql.split(", ")]
+            for q in self.queryTags:
+                qs = self.glossary_df.loc[q.lower(), 'RelatedQuestions']
+                qs = qs.strip("[]")
+                qs = [int(i) for i in qs.split(", ")]
+                ql.append(qs)
+
+            ql = list(set([q for sublist in ql for q in sublist]))
             return ql
         else:
             return None
 
     def query_faq(self):
         if self.questionNums:
-            return self.faq_df.loc[self.questionNums,['Question', 'RelatedTags', 'Answer']]
+            return self.faq_df.loc[self.questionNums, ['Question', 'RelatedTags', 'Answer']]
         else:
             return None
 
