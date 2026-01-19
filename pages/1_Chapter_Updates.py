@@ -45,6 +45,29 @@ def generate_chart(df):
     return fig
 
 
+def velocity_chart(df):
+    dates = [datetime.strptime(d, '%b %d, %Y') for d in df['Date*']]
+    w_vel = [int(x) for x in df['Word Velocity****']]
+    avg_vel = [int(x) for x in df['Running Average Word Velocity****']]
+
+    fig, ax1 = plt.subplots()
+
+    # column chart
+    ax1.bar(dates, w_vel, color='darkblue', label='Chapter Word Velocity', width=10)
+    ax1.set_xlabel('Date')
+    ax1.set_ylabel('Word Velocity (words / day)', color='black')
+    ax1.tick_params(axis='y', labelcolor='black')
+
+    # Running Avg Line
+
+    ax1.plot(dates, avg_vel, color='red', label='Running Avg Word Velocity')
+    ax1.legend(loc='upper left')
+
+    plt.title('Travel Fanfiction Chapter Word Velocity')
+    plt.tight_layout()
+    return fig
+
+
 if 'updates' not in st.session_state:
     df_updates = pd.read_csv('data/travelerchapterupdates.csv', index_col='Chapter')
     st.session_state['updates'] = df_updates
@@ -61,23 +84,30 @@ st.markdown("<p style='text-align: left; color: grey;'> This is the chapter upda
             "fanfiction story</p>", unsafe_allow_html=True)
 st.divider()
 
-with st.expander('Display Chapter Update Chart'):
-    st.pyplot(generate_chart(df_updates))
-st.divider()
-
 st.subheader('Chapter Update Table')
 st.dataframe(df_updates[chapter_cols], use_container_width=True)
+st.divider()
+
+st.subheader('Chapter Update Charts')
+with st.expander('Display Chapter Update Chart'):
+    st.pyplot(generate_chart(df_updates))
+
+with st.expander('Display Chapter Word Velocity Chart'):
+    st.pyplot(velocity_chart(df_updates))
+st.divider()
 
 st.write('----- General Notes -----')
-st.write('*Chapter date is based on the earliest review posted on FFN.')
+st.write('\* Chapter date is based on the earliest review posted on FFN.')
 
-st.write('**word counts based on https://wordcounter.net/. Counts may include section break text, '
+st.write('** word counts based on https://wordcounter.net/. Counts may include section break text, '
          'but exclude author\'s notes.')
 
 st.write('*** Note that the total word count might differ from what is shown on FFN. '
          'This is because FFN uses a different methodology to count words that results in a roughly 2% higher word '
          'count as compared to most word processors. See Reddit post by SteelbadgerMk2 in this thread for more '
          'detail - https://www.reddit.com/r/FanFiction/comments/nkp1w2/word_count_on_ao3_and_ffnet/.')
+
+st.write('**** Word velocity is defined as chapter word count / days since previous chapter')
 
 st.write('----- Chapter Specific Notes -----')
 st.write('The earliest review for chapter 46 was posted on Jan 2, 2019. Switched to next earliest review date of '
