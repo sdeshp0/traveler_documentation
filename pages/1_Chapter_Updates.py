@@ -1,6 +1,6 @@
 import streamlit as st
 import pandas as pd
-from matplotlib import pyplot as plt
+import plotly.graph_objects as go
 from datetime import datetime
 import warnings
 
@@ -12,59 +12,170 @@ st.logo('data/pokeball_logo.svg')
 
 
 def generate_chart(df):
+    # Parse data
     dates = [datetime.strptime(d, '%b %d, %Y') for d in df['Date*']]
     count = [int(x.replace(',', '')) for x in df['Word Count**']]
     tot_count = [int(x.replace(',', '')) for x in df['Running Total Word Count***']]
     avg_count = [int(x.replace(',', '')) for x in df['Running Avg Word Count']]
-    chapters = df.index.tolist()
     titles = df['Title'].tolist()
 
-    fig, ax1 = plt.subplots()
+    # Format numbers as "12.345k" or "1.234M"
+    def fmt_k(n):
+        if n >= 1_000_000:
+            return f"{n / 1_000_000:.3f}M"
+        elif n >= 1_000:
+            return f"{n / 1_000:.3f}k"
+        else:
+            return str(n)
 
-    # column chart
-    ax1.bar(dates, count, color='darkblue', label='Word Count', width=10)
-    ax1.set_xlabel('Date')
-    ax1.set_ylabel('Word Count', color='black')
-    ax1.tick_params(axis='y', labelcolor='black')
+    # Build customdata matrix for unified tooltip
+    # Each row: [title, word_count_k, running_avg_k, running_total_k]
+    customdata = list(zip(
+        titles,
+        [fmt_k(c) for c in count],
+        [fmt_k(a) for a in avg_count],
+        [fmt_k(t) for t in tot_count]
+    ))
 
-    # Running Avg Line
+    # Unified hovertemplate
+    hovertemplate = (
+        "<b>Date:</b> %{x|%B %d, %Y}<br>"
+        "<b>Title:</b> %{customdata[0]}<br><br>"
+        "<b>Word Count:</b> %{customdata[1]}<br>"
+        "<b>Running Average:</b> %{customdata[2]}<br>"
+        "<b>Running Total:</b> %{customdata[3]}<br>"
+        "<extra></extra>"
+    )
 
-    ax1.plot(dates, avg_count, color='red', label='Running Avg Word Count')
-    ax1.legend(loc='upper left')
+    fig = go.Figure()
 
-    # Running Total Line
+    # --- Bar Chart: Word Count ---
+    fig.add_bar(
+        x=dates,
+        y=count,
+        name='Word Count',
+        marker_color='darkblue',
+        customdata=customdata,
+        hoverinfo='skip'
+    )
 
-    ax2 = ax1.twinx()
-    ax2.plot(dates, tot_count, color='black', label='Running Total Word Count')
-    ax2.set_ylabel('Running Total Word Count', color='black')
-    ax2.tick_params(axis='y', labelcolor='black')
-    ax2.legend(loc='upper right')
+    # --- Line Chart: Running Avg ---
+    fig.add_scatter(
+        x=dates,
+        y=avg_count,
+        mode='lines',
+        name='Running Avg Word Count',
+        line=dict(color='red', width=2),
+        customdata=customdata,
+        hoverinfo='skip'
+    )
 
-    plt.title('Traveler Fanfiction Chapter Updates')
-    plt.tight_layout()
+    # --- Line Chart: Running Total (Secondary Axis) ---
+    fig.add_scatter(
+        x=dates,
+        y=tot_count,
+        mode='lines',
+        name='Running Total Word Count',
+        line=dict(color='black', width=2),
+        yaxis='y2',
+        customdata=customdata,
+        hovertemplate=hovertemplate
+    )
+
+    # --- Layout ---
+    fig.update_layout(
+        title='Traveler Fanfiction Chapter Updates',
+        xaxis=dict(title='Date'),
+        yaxis=dict(title='Word Count'),
+        yaxis2=dict(
+            title='Running Total Word Count',
+            overlaying='y',
+            side='right'
+        ),
+        legend=dict(
+            x=0,
+            y=1,
+            xanchor="left",
+            yanchor="top"
+        ),
+        hovermode='x unified',
+        margin=dict(l=60, r=60, t=60, b=60)
+    )
+
     return fig
 
 
 def velocity_chart(df):
+    # Parse data
     dates = [datetime.strptime(d, '%b %d, %Y') for d in df['Date*']]
     w_vel = [int(x) for x in df['Word Velocity****']]
     avg_vel = [int(x) for x in df['Running Average Word Velocity****']]
+    titles = df['Title'].tolist()
 
-    fig, ax1 = plt.subplots()
+    # Number formatter for tooltip
+    def fmt_k(n):
+        if n >= 1_000_000:
+            return f"{n/1_000_000:.3f}M"
+        elif n >= 1_000:
+            return f"{n/1_000:.3f}k"
+        else:
+            return str(n)
 
-    # column chart
-    ax1.bar(dates, w_vel, color='darkblue', label='Chapter Word Velocity', width=10)
-    ax1.set_xlabel('Date')
-    ax1.set_ylabel('Word Velocity (words / day)', color='black')
-    ax1.tick_params(axis='y', labelcolor='black')
+    # Customdata for unified tooltip
+    # Each row: [title, velocity_k, avg_velocity_k]
+    customdata = list(zip(
+        titles,
+        [fmt_k(v) for v in w_vel],
+        [fmt_k(a) for a in avg_vel]
+    ))
 
-    # Running Avg Line
+    # Unified tooltip (shown only on the line trace)
+    hovertemplate = (
+        "<b>Date:</b> %{x|%B %d, %Y}<br>"
+        "<b>Title:</b> %{customdata[0]}<br><br>"
+        "<b>Word Velocity:</b> %{customdata[1]}<br>"
+        "<b>Running Average:</b> %{customdata[2]}<br>"
+        "<extra></extra>"
+    )
 
-    ax1.plot(dates, avg_vel, color='red', label='Running Avg Word Velocity')
-    ax1.legend(loc='upper left')
+    fig = go.Figure()
 
-    plt.title('Travel Fanfiction Chapter Word Velocity')
-    plt.tight_layout()
+    # --- Bar Chart: Word Velocity ---
+    fig.add_bar(
+        x=dates,
+        y=w_vel,
+        name='Chapter Word Velocity',
+        marker_color='darkblue',
+        hoverinfo='skip',        # hide bar tooltip
+        customdata=customdata
+    )
+
+    # --- Line Chart: Running Average ---
+    fig.add_scatter(
+        x=dates,
+        y=avg_vel,
+        mode='lines',
+        name='Running Avg Word Velocity',
+        line=dict(color='red', width=2),
+        customdata=customdata,
+        hovertemplate=hovertemplate
+    )
+
+    # --- Layout ---
+    fig.update_layout(
+        title='Traveler Fanfiction Chapter Word Velocity',
+        xaxis=dict(title='Date'),
+        yaxis=dict(title='Word Velocity (words/day)'),
+        hovermode='x unified',
+        legend=dict(
+            x=0,
+            y=1,
+            xanchor="left",
+            yanchor="top"
+        ),
+        margin=dict(l=60, r=60, t=60, b=60)
+    )
+
     return fig
 
 
@@ -90,10 +201,11 @@ st.divider()
 
 st.subheader('Chapter Update Charts')
 with st.expander('Display Chapter Update Chart'):
-    st.pyplot(generate_chart(df_updates))
+    st.plotly_chart(generate_chart(df_updates), use_container_width=True)
 
 with st.expander('Display Chapter Word Velocity Chart'):
-    st.pyplot(velocity_chart(df_updates))
+    st.plotly_chart(velocity_chart(df_updates), use_container_width=True)
+
 st.divider()
 
 st.write('----- General Notes -----')
